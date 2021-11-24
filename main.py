@@ -27,6 +27,7 @@ STANDARD_OPTIONS= ''' Usual activities:
 /friends
 /party
 /reading
+/gaming
 
 /eating
 /snacking

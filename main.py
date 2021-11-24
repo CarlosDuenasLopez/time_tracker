@@ -2,7 +2,6 @@ import os
 from telebot import TeleBot
 import json
 from datetime import date, datetime, time, timedelta
-from matplotlib import pyplot as plt
 import plotly.express as px
 
 API_KEY = "2095864231:AAGOdA4LGq9w3CajxhWJvuPpaWUUocvfJHg"
@@ -52,11 +51,10 @@ def command_handler(message):
     if message.from_user.id == MY_ID:
         if "info" in message.text.lower():
             if "week" in message.text.lower():
-                print("weeking")
                 send_week_chart(chat_id)
             else:
                 send_day_chart(chat_id, "image.png")
-        else:
+        elif "start" not in message.text.lower():
             enter_activity(message.text[1:], datetime.now())
         send_info(chat_id)
 
@@ -80,13 +78,12 @@ def send_day_chart(chat_id, filename):
 def send_week_chart(chat_id):
     num_images = week_chart()
     for i in range(num_images):
-        send_day_chart(chat_id, f"image{i}.png")
-        os.remove(f"image{i}.png")
+        send_day_chart(chat_id, "image%d.png".format(i))
+        os.remove("image%d.png".format(i))
 
 
 
 def enter_activity(status, in_time):
-    in_time: datetime
     log = {}
     with open("log.json", "r") as log:
         log = json.load(log)
@@ -121,9 +118,9 @@ def day_chart(date, filename):
     times = [t.total_seconds() for t in activity_dict.keys()]
     labels = [activity_dict[key] for key in activity_dict.keys()]
 
-    print(activity_dict)
     fig = px.pie(values=times, names=labels, title=date)
     fig.write_image(filename)
+    return times, labels
 
 
 def week_chart():
@@ -131,13 +128,19 @@ def week_chart():
     data = json.load(open("log.json", "r"))
     keys = list(data.keys())
     date_index = keys.index(today_date)
+    total_times = []
+    total_labels = []
     if date_index < 6:
         dates = keys[:date_index+1]
     else:
         dates = keys[date_index-6:date_index+1]
     for i, date in enumerate(dates):
-        day_chart(date, f"image{i}.png")
-    return len(dates)
+        times, labels = day_chart(date, "image%d.png".format(i))
+        total_times += times
+        total_labels += labels
+    fig = px.pie(values=total_times, names=total_labels, title="WEEK "+dates[0]+" <-> "+today_date)
+    fig.write_image("image%d.png".format(i+1))
+    return len(dates)+1
 
 
 bot.infinity_polling()

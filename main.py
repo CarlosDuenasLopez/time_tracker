@@ -81,8 +81,8 @@ def send_day_chart(chat_id, filename):
 def send_week_chart(chat_id):
     num_images = week_chart()
     for i in range(num_images):
-        send_day_chart(chat_id, "image%d.png".format(i))
-        os.remove("image%d.png".format(i))
+        send_day_chart(chat_id, f"image{i}.png")
+        os.remove(f"image{i}.png")
 
 
 
@@ -138,11 +138,11 @@ def week_chart():
     else:
         dates = keys[date_index-6:date_index+1]
     for i, date in enumerate(dates):
-        times, labels = day_chart(date, "image%d.png".format(i))
+        times, labels = day_chart(date, f"image{i}.png")
         total_times += times
         total_labels += labels
     fig = px.pie(values=total_times, names=total_labels, title="WEEK "+dates[0]+" <-> "+today_date)
-    fig.write_image("image%d.png".format(i+1))
+    fig.write_image(f"image{i+1}.png")
     return len(dates)+1
 
 

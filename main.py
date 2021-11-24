@@ -32,6 +32,8 @@ STANDARD_OPTIONS= ''' Usual activities:
 /snacking
 /sleep
 /nap
+
+/dubious
 '''
 
 

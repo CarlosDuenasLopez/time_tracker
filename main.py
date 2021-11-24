@@ -15,6 +15,7 @@ last_info_id = 0
 STANDARD_OPTIONS= ''' Usual activities:
 
 /info
+/info_week
 
 /programming
 /youtube
@@ -36,29 +37,25 @@ STANDARD_OPTIONS= ''' Usual activities:
 
 
 @bot.message_handler(func=lambda message: message.text[0] != "/")
-def arb_entry(message): # for arbitrary entries
+def arb_entry(message): # for arbitrary entries without "/"
     global last_info_id
     if message.from_user.id == MY_ID:
         chat_id = message.chat.id
         if "info" not in message.text.lower(): 
             enter_activity(message.text.lower(), datetime.now())
-        else:
-            if " w" in message.text.lower():
-                week_chart()
-            else:
-                send_day_chart(chat_id)
         send_info(chat_id)
 
 
 @bot.message_handler(func=lambda message: message.text[0] == "/")
-def hi(message):
+def command_handler(message):
     chat_id = message.chat.id
     if message.from_user.id == MY_ID:
-        if "/info" in message.text.lower():
-            if "w" in message.text.lower():
-                week_chart()
+        if "info" in message.text.lower():
+            if "week" in message.text.lower():
+                print("weeking")
+                send_week_chart(chat_id)
             else:
-                send_day_chart(chat_id)
+                send_day_chart(chat_id, "image.png")
         else:
             enter_activity(message.text[1:], datetime.now())
         send_info(chat_id)
@@ -73,11 +70,19 @@ def send_info(chat_id):
         pass
     last_info_id = bot.send_message(chat_id, STANDARD_OPTIONS).id
 
-def send_day_chart(chat_id):
+def send_day_chart(chat_id, filename):
     today_chart()
-    img = open("image.png", "rb")
+    img = open(filename, "rb")
     bot.send_photo(chat_id, img)
     img.close()
+
+
+def send_week_chart(chat_id):
+    num_images = week_chart()
+    for i in range(num_images):
+        send_day_chart(chat_id, f"image{i}.png")
+        os.remove(f"image{i}.png")
+
 
 
 def enter_activity(status, in_time):
@@ -93,10 +98,14 @@ def enter_activity(status, in_time):
     
     with open("log.json", "w") as log_file:
         json.dump(log, log_file)
-    
+
 
 def today_chart():
     date = str(datetime.now())[:10]
+    day_chart(date, "image.png")
+    
+# #7D99D9
+def day_chart(date, filename):
     data = json.load(open("log.json", "r"))[date]
 
     activity_dict = {}
@@ -112,12 +121,23 @@ def today_chart():
     times = [t.total_seconds() for t in activity_dict.keys()]
     labels = [activity_dict[key] for key in activity_dict.keys()]
 
+    print(activity_dict)
     fig = px.pie(values=times, names=labels, title=date)
-    fig.write_image("image.png")
+    fig.write_image(filename)
 
 
 def week_chart():
-    pass
+    today_date = str(datetime.now())[:10]
+    data = json.load(open("log.json", "r"))
+    keys = list(data.keys())
+    date_index = keys.index(today_date)
+    if date_index < 6:
+        dates = keys[:date_index+1]
+    else:
+        dates = keys[date_index-6:date_index+1]
+    for i, date in enumerate(dates):
+        day_chart(date, f"image{i}.png")
+    return len(dates)
 
 
 bot.infinity_polling()

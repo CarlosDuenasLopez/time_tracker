@@ -67,8 +67,8 @@ def command_handler(message):
         if "/yesterday" in message.text.lower():
             send_day_chart(chat_id, "image.png", datetime.now()-timedelta(days=1))
         if "/json" in message.text.lower():
-            bot.send_message(chat_id, json.dumps(open("log.json", "r")))
-        elif not any(x in message.text.lower() for x in INFO_COMMANDS) in message.text.lower():
+            bot.send_message(chat_id, json.dumps(json.load(open("log.json", "r"))))
+        elif not any((x in message.text.lower()) for x in INFO_COMMANDS):
             enter_activity(message.text[1:], datetime.now()+time_diff)
         send_info(chat_id)
 

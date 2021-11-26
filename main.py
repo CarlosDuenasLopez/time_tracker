@@ -4,6 +4,8 @@ import json
 from datetime import date, datetime, time, timedelta
 import plotly.express as px
 from platform import system
+from rich import print
+from collections import defaultdict
 
 API_KEY = "2095864231:AAGOdA4LGq9w3CajxhWJvuPpaWUUocvfJHg"
 MY_ID = 28076818
@@ -112,7 +114,7 @@ def day_chart(date, image_filename):
     all_data = json.load(open("log.json", "r"))
     data = all_data[date]
 
-    activity_dict = {}
+    activity_dict = defaultdict(timedelta)
     last_key = "00:00"
     for key in data:
         last_time = timedelta(hours= int(last_key[0:2]), minutes= int(last_key[3:5]))
@@ -120,7 +122,7 @@ def day_chart(date, image_filename):
 
         delta = now_time - last_time
 
-        activity_dict[data[key]] = delta
+        activity_dict[data[key]] += delta
         last_key = key
     next_day, _ = next_date(date)
     if next_day in all_data:
@@ -129,7 +131,9 @@ def day_chart(date, image_filename):
         time2 = time_2nd_day
         delta = two_day_time_diff(time1, time2)
 
-        activity_dict[all_data[next_day][time_2nd_day]] = delta
+        activity_dict[all_data[next_day][time_2nd_day]] += delta
+
+    print(activity_dict)
 
     labels = [t for t in activity_dict.keys()]
     times = [activity_dict[key].total_seconds() for key in activity_dict.keys()]

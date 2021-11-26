@@ -39,9 +39,10 @@ STANDARD_OPTIONS= ''' Usual activities:
 /nap
 
 /dubious
+/json
 '''
 
-INFO_COMMANDS = ["/info", "/info_week", "/yesterday"]
+INFO_COMMANDS = ["/info", "/info_week", "/yesterday", "/json"]
 time_diff = timedelta(hours=1) if system() == "Linux" else timedelta(0)
 
 @bot.message_handler(func=lambda message: message.text[0] != "/")
@@ -65,6 +66,8 @@ def command_handler(message):
                 send_day_chart(chat_id, "image.png", datetime.now())
         if "/yesterday" in message.text.lower():
             send_day_chart(chat_id, "image.png", datetime.now()-timedelta(days=1))
+        if "/json" in message.text.lower():
+            bot.send_message(chat_id, json.dumps(open("log.json", "r")))
         elif not any(x in message.text.lower() for x in INFO_COMMANDS) in message.text.lower():
             enter_activity(message.text[1:], datetime.now()+time_diff)
         send_info(chat_id)

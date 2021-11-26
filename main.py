@@ -105,8 +105,9 @@ def today_chart():
     day_chart(date, "image.png")
     
 # #7D99D9
-def day_chart(date, filename):
-    data = json.load(open("log.json", "r"))[date]
+def day_chart(date, image_filename):
+    all_data = json.load(open("log.json", "r"))
+    data = all_data[date]
 
     activity_dict = {}
     last_key = "00:00"
@@ -118,12 +119,35 @@ def day_chart(date, filename):
 
         activity_dict[delta] = data[key]
         last_key = key
+    next_day, _ = next_date(date)
+    if next_day in all_data:
+        time1 = list(data.keys())[-1]
+        time_2nd_day = list(all_data[next_day].keys())[0]
+        time2 = time_2nd_day
+        delta = two_day_time_diff(time1, time2)
+        activity_dict[delta] = all_data[next_day][time_2nd_day]
+
     times = [t.total_seconds() for t in activity_dict.keys()]
     labels = [activity_dict[key] for key in activity_dict.keys()]
 
     fig = px.pie(values=times, names=labels, title=date)
-    fig.write_image(filename)
+    fig.write_image(image_filename)
     return times, labels
+
+
+def next_date(date):
+    datetime_date = datetime(year= int(date[:4]), month=int(date[5:7]), day=int(date[-2:])) + timedelta(days=1)
+    next_day = str(datetime_date)[:10]
+    return next_day, datetime_date
+
+
+def two_day_time_diff(time1, time2):
+    # parameters as strings like "21:00"
+    h1, m1, h2, m2 = int(time1[:2]), int(time1[-2:]), int(time2[:2]), int(time2[-2:])
+    delta1 = timedelta(days=0, hours= h1, minutes=m1)
+    delta2 = timedelta(days=1, hours= h2, minutes=m2)
+
+    return delta2-delta1
 
 
 def week_chart():
@@ -146,4 +170,5 @@ def week_chart():
     return len(dates)+1
 
 
-bot.infinity_polling()
+# bot.infinity_polling()
+day_chart("2021-11-23", "test_image.png")

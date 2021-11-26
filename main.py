@@ -3,6 +3,7 @@ from telebot import TeleBot
 import json
 from datetime import date, datetime, time, timedelta
 import plotly.express as px
+from platform import system
 
 API_KEY = "2095864231:AAGOdA4LGq9w3CajxhWJvuPpaWUUocvfJHg"
 MY_ID = 28076818
@@ -39,6 +40,7 @@ STANDARD_OPTIONS= ''' Usual activities:
 '''
 
 INFO_COMMANDS = ["/info", "/info_week", "/yesterday"]
+time_diff = timedelta(hours=1) if system() == "Linux" else timedelta(0)
 
 @bot.message_handler(func=lambda message: message.text[0] != "/")
 def arb_entry(message): # for arbitrary entries without "/"
@@ -46,7 +48,7 @@ def arb_entry(message): # for arbitrary entries without "/"
     if message.from_user.id == MY_ID:
         chat_id = message.chat.id
         if "info" not in message.text.lower(): 
-            enter_activity(message.text.lower(), datetime.now())
+            enter_activity(message.text.lower(), datetime.now()+time_diff)
         send_info(chat_id)
 
 
@@ -62,7 +64,7 @@ def command_handler(message):
         if "/yesterday" in message.text.lower():
             send_day_chart(chat_id, "image.png", datetime.now()-timedelta(days=1))
         elif not any(x in message.text.lower() for x in INFO_COMMANDS) in message.text.lower():
-            enter_activity(message.text[1:], datetime.now())
+            enter_activity(message.text[1:], datetime.now()+time_diff)
         send_info(chat_id)
 
         

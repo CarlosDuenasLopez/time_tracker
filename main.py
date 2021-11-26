@@ -133,7 +133,6 @@ def day_chart(date, image_filename):
 
         activity_dict[all_data[next_day][time_2nd_day]] += delta
 
-    print(activity_dict)
 
     labels = [t for t in activity_dict.keys()]
     times = [activity_dict[key].total_seconds() for key in activity_dict.keys()]

@@ -128,7 +128,6 @@ def day_chart(date, image_filename):
         delta = two_day_time_diff(time1, time2)
 
         activity_dict[all_data[next_day][time_2nd_day]] = delta
-        print(activity_dict)
 
     labels = [t for t in activity_dict.keys()]
     times = [activity_dict[key].total_seconds() for key in activity_dict.keys()]

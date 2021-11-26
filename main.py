@@ -13,6 +13,7 @@ last_info_id = 0
 
 STANDARD_OPTIONS= ''' Usual activities:
 
+/yesterday
 /info
 /info_week
 
@@ -37,6 +38,7 @@ STANDARD_OPTIONS= ''' Usual activities:
 /dubious
 '''
 
+INFO_COMMANDS = ["/info", "/info_week", "/yesterday"]
 
 @bot.message_handler(func=lambda message: message.text[0] != "/")
 def arb_entry(message): # for arbitrary entries without "/"
@@ -56,8 +58,10 @@ def command_handler(message):
             if "week" in message.text.lower():
                 send_week_chart(chat_id)
             else:
-                send_day_chart(chat_id, "image.png")
-        elif "start" not in message.text.lower():
+                send_day_chart(chat_id, "image.png", datetime.now())
+        if "/yesterday" in message.text.lower():
+            send_day_chart(chat_id, "image.png", datetime.now()-timedelta(days=1))
+        elif not any(x in message.text.lower() for x in INFO_COMMANDS) in message.text.lower():
             enter_activity(message.text[1:], datetime.now())
         send_info(chat_id)
 
@@ -71,8 +75,9 @@ def send_info(chat_id):
         pass
     last_info_id = bot.send_message(chat_id, STANDARD_OPTIONS).id
 
-def send_day_chart(chat_id, filename):
-    today_chart()
+def send_day_chart(chat_id, filename, date):
+    str_date = str(date)[:10]
+    day_chart(str_date, "image.png")
     img = open(filename, "rb")
     bot.send_photo(chat_id, img)
     img.close()
@@ -99,10 +104,6 @@ def enter_activity(status, in_time):
     with open("log.json", "w") as log_file:
         json.dump(log, log_file)
 
-
-def today_chart():
-    date = str(datetime.now())[:10]
-    day_chart(date, "image.png")
     
 # #7D99D9
 def day_chart(date, image_filename):
@@ -117,7 +118,7 @@ def day_chart(date, image_filename):
 
         delta = now_time - last_time
 
-        activity_dict[delta] = data[key]
+        activity_dict[data[key]] = delta
         last_key = key
     next_day, _ = next_date(date)
     if next_day in all_data:
@@ -125,10 +126,12 @@ def day_chart(date, image_filename):
         time_2nd_day = list(all_data[next_day].keys())[0]
         time2 = time_2nd_day
         delta = two_day_time_diff(time1, time2)
-        activity_dict[delta] = all_data[next_day][time_2nd_day]
 
-    times = [t.total_seconds() for t in activity_dict.keys()]
-    labels = [activity_dict[key] for key in activity_dict.keys()]
+        activity_dict[all_data[next_day][time_2nd_day]] = delta
+        print(activity_dict)
+
+    labels = [t for t in activity_dict.keys()]
+    times = [activity_dict[key].total_seconds() for key in activity_dict.keys()]
 
     fig = px.pie(values=times, names=labels, title=date)
     fig.write_image(image_filename)
@@ -145,7 +148,7 @@ def two_day_time_diff(time1, time2):
     # parameters as strings like "21:00"
     h1, m1, h2, m2 = int(time1[:2]), int(time1[-2:]), int(time2[:2]), int(time2[-2:])
     delta1 = timedelta(days=0, hours= h1, minutes=m1)
-    delta2 = timedelta(days=1, hours= h2, minutes=m2)
+    delta2 = timedelta(days=1, hours= 0, minutes=0)
 
     return delta2-delta1
 
@@ -170,5 +173,5 @@ def week_chart():
     return len(dates)+1
 
 
-# bot.infinity_polling()
-day_chart("2021-11-23", "test_image.png")
+bot.infinity_polling()
+# day_chart("2021-11-23", "test_image.png")
